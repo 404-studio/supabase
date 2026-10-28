@@ -19,7 +19,7 @@ import { HeadingReel } from 'ui-patterns/Toc/heading-reel'
 import { getCustomContent } from '../../../lib/custom-content/getCustomContent'
 import GlobalNavigationMenu from './GlobalNavigationMenu'
 import useDropdownMenu from './useDropdownMenu'
-import { SearchV2Trigger, useSearchV2Variant } from '@/features/SearchV2'
+import { AskAiTrigger, SearchV2Trigger, useSearchV2Variant } from '@/features/SearchV2'
 
 const GlobalMobileMenu = dynamic(() => import('./GlobalMobileMenu'))
 const TopNavDropdown = dynamic(() => import('./TopNavDropdown'))
@@ -47,6 +47,7 @@ const TopNavBar: FC<TopNavBarProps> = ({
   const user = useUser()
   const menu = useDropdownMenu(user)
   const searchVariant = useSearchV2Variant()
+  const isSearchV2 = searchVariant === 'search-v2-active'
   const { theme, setTheme } = useTheme()
 
   const isOpen = onMenuToggle ? isMenuOpen : mobileMenuOpen
@@ -68,19 +69,15 @@ const TopNavBar: FC<TopNavBarProps> = ({
               <MobileHeaderLogo scrolledTitle={scrolledTitle} />
             </div>
 
-            <div className="flex gap-2 items-center">
+            <div className={cn('flex items-center', isSearchV2 ? 'gap-3' : 'gap-2')}>
               <DevToolbarTrigger />
               {onMenuToggle && isOpen ? (
                 <MobileNavThemeButton value={theme} onValueChange={setTheme} />
-              ) : searchVariant === 'search-v2-active' ? (
-                <SearchV2Trigger
-                  placeholder={
-                    <>
-                      Search
-                      <span className="hidden xl:inline ml-1"> docs...</span>
-                    </>
-                  }
-                />
+              ) : isSearchV2 ? (
+                <>
+                  <SearchV2Trigger placeholder="Search" />
+                  <AskAiTrigger />
+                </>
               ) : (
                 <CommandMenuTriggerInput
                   className="[&>div>p]:text-foreground-lighter"
@@ -125,7 +122,8 @@ const TopNavBar: FC<TopNavBarProps> = ({
             </div>
           </div>
           <div className="hidden lg:flex items-center justify-end gap-3">
-            {!isUserLoading && (
+            {/* search v2 shows Ask AI in this bar, so it drops Dashboard for logged-in users */}
+            {!isUserLoading && !(isSearchV2 && isLoggedIn) && (
               <Button variant="primary" asChild>
                 <a href="/dashboard" className="h-[30px]" target="_blank" rel="noreferrer noopener">
                   {isLoggedIn ? 'Dashboard' : 'Sign up'}
