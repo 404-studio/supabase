@@ -59,7 +59,7 @@ notify pgrst, 'reload config';
 
 <Admonition type="caution">
 
-`pgrst.db_plan_enabled` exposes query plans over your Data API. Don't enable it in production.
+`pgrst.db_plan_enabled` exposes query plans over your Data API. In production, restrict it to your own IP address before you enable it, as described in [Query plans with explain()](/docs/guides/api/query-plans#production-use-with-pre-request-protection).
 
 </Admonition>
 
