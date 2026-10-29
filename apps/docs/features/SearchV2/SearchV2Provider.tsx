@@ -1,5 +1,6 @@
 'use client'
 
+import type { DocsSearchV2AskAiOpenedEvent } from 'common/telemetry-constants'
 import { SearchDialog, useSearchShortcut } from 'docs-search/components'
 import { useRouter } from 'next/navigation'
 import { createContext, use, useState, type ReactNode } from 'react'
@@ -9,14 +10,17 @@ import { ASK_AI_DIALOG_LABELS, AskAiPanel } from './AskAiPanel'
 import { SearchV2Panel } from './SearchV2Dialog'
 import { useSearchV2Dialog } from './useSearchV2Dialog'
 import { useSearchV2Variant } from './useSearchV2Variant'
+import { useSendTelemetryEvent } from '@/lib/telemetry'
 
 type SearchTriggerType = Parameters<ReturnType<typeof useSearchV2Dialog>['openDialog']>[0]
+
+type AskAiTriggerType = DocsSearchV2AskAiOpenedEvent['properties']['triggerType']
 
 interface SearchV2ContextValue {
   isSearchOpen: boolean
   isAskAiOpen: boolean
   showSearch: (triggerType: SearchTriggerType) => void
-  showAskAi: (question?: string) => void
+  showAskAi: (options: { triggerType: AskAiTriggerType; question?: string }) => void
 }
 
 type DialogPanel = 'search' | 'ask-ai'
@@ -38,6 +42,7 @@ const SearchV2Context = createContext<SearchV2ContextValue | null>(null)
  */
 export function SearchV2Provider({ children }: SearchV2ProviderProps) {
   const router = useRouter()
+  const sendTelemetryEvent = useSendTelemetryEvent()
   const isEnabled = useSearchV2Variant() === 'search-v2-active'
   const {
     open: isSearchOpen,
@@ -68,17 +73,32 @@ export function SearchV2Provider({ children }: SearchV2ProviderProps) {
       .finished.finally(() => delete root.dataset.searchDialogMorph)
   }
 
+  const closeAskAi = () => {
+    if (!isAskAiOpen) return
+    setIsAskAiOpen(false)
+    sendTelemetryEvent({ action: 'docs_search_v2_ask_ai_closed' })
+  }
+
   const showSearch = (triggerType: SearchTriggerType) =>
     showPanel({
       next: 'search',
       update: () => {
-        setIsAskAiOpen(false)
+        closeAskAi()
         setPanel('search')
         openSearch(triggerType)
       },
     })
 
-  const showAskAi = (question = '') =>
+  const showAskAi: SearchV2ContextValue['showAskAi'] = ({ triggerType, question = '' }) => {
+    if (!isAskAiOpen) {
+      sendTelemetryEvent({ action: 'docs_search_v2_ask_ai_opened', properties: { triggerType } })
+    }
+    if (question) {
+      sendTelemetryEvent({
+        action: 'docs_search_v2_ask_ai_question_submitted',
+        properties: { question, questionSource: 'search' },
+      })
+    }
     showPanel({
       next: 'ask-ai',
       update: () => {
@@ -88,9 +108,10 @@ export function SearchV2Provider({ children }: SearchV2ProviderProps) {
         setIsAskAiOpen(true)
       },
     })
+  }
 
   const closeDialog = () => {
-    setIsAskAiOpen(false)
+    closeAskAi()
     if (isSearchOpen) handleSearchOpenChange(false)
   }
 
@@ -139,6 +160,6 @@ export function useSearchV2(): SearchV2ContextValue {
 // its own component so the shortcuts only exist while the experiment is on
 function SearchV2Shortcuts({ onSearch, onAskAi }: SearchV2ShortcutsProps) {
   useSearchShortcut(() => onSearch('keyboard_shortcut'))
-  useSearchShortcut(() => onAskAi(), 'i')
+  useSearchShortcut(() => onAskAi({ triggerType: 'keyboard_shortcut' }), 'i')
   return null
 }
