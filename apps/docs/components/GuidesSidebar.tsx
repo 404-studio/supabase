@@ -4,7 +4,7 @@ import { AiTools } from '~/components/AiTools'
 import { Feedback } from '~/components/Feedback'
 import { isFeatureEnabled } from 'common'
 import { usePathname } from 'next/navigation'
-import { cn } from 'ui'
+import { cn, ScrollArea } from 'ui'
 import { ExpandableVideo } from 'ui-patterns/ExpandableVideo'
 import { TocSection } from 'ui-patterns/Toc'
 
@@ -34,7 +34,7 @@ const GuidesSidebar = ({
   const tocVideoPreview = `https://img.youtube.com/vi/${video}/0.jpg`
 
   return (
-    <div className={cn('thin-scrollbar overflow-y-auto h-fit', 'px-px', className)}>
+    <ScrollArea className={cn('h-fit flex-col', 'px-px', className)}>
       <div className="w-full relative border-l flex flex-col gap-6 lg:gap-8 px-2 h-fit">
         {video && (
           <div className="relative pl-5">
@@ -57,7 +57,7 @@ const GuidesSidebar = ({
         </div>
         {!hideToc && toc.length !== 0 && <TocSection items={toc} />}
       </div>
-    </div>
+    </ScrollArea>
   )
 }
 
