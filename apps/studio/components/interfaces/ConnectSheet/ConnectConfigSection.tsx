@@ -1,4 +1,5 @@
 import { CheckIcon, ChevronsUpDownIcon } from 'lucide-react'
+import { ScrollArea as ScrollAreaPrimitive } from 'radix-ui'
 import { useState } from 'react'
 import {
   Button,
@@ -14,6 +15,8 @@ import {
   PopoverTrigger,
   RadioGroupStacked,
   RadioGroupStackedItem,
+  ScrollBar,
+  ScrollViewport,
   Select,
   SelectContent,
   SelectItem,
@@ -335,41 +338,46 @@ function ConnectCombobox({
           <p className="sr-only" role="status" aria-live="polite">
             {showEmptyStatus ? emptyMessage : ''}
           </p>
-          <CommandList
-            className="max-h-72 overscroll-contain"
-            ref={(node) => {
-              if (node?.id) setListboxElementId(node.id)
-            }}
-          >
-            <CommandEmpty>{emptyMessage}</CommandEmpty>
-            <CommandGroup>
-              {options.map((option) => (
-                <CommandItem
-                  key={option.value}
-                  value={option.label}
-                  keywords={[option.value]}
-                  onSelect={() => {
-                    onValueChange(option.value)
-                    handleOpenChange(false)
-                  }}
-                  className="gap-x-2"
-                >
-                  <CheckIcon
-                    className={cn(
-                      'h-4 w-4 shrink-0',
-                      option.value === value ? 'opacity-100' : 'opacity-0'
-                    )}
-                  />
-                  {showIcons && option.icon && (
-                    <span aria-hidden="true" className="flex shrink-0">
-                      <ConnectionIcon icon={option.icon} />
-                    </span>
-                  )}
-                  <span className="truncate">{option.label}</span>
-                </CommandItem>
-              ))}
-            </CommandGroup>
-          </CommandList>
+          <ScrollAreaPrimitive.Root className="flex flex-col overflow-hidden">
+            <ScrollViewport className="max-h-72 overscroll-contain">
+              <CommandList
+                className="max-h-none overflow-visible"
+                ref={(node) => {
+                  if (node?.id) setListboxElementId(node.id)
+                }}
+              >
+                <CommandEmpty>{emptyMessage}</CommandEmpty>
+                <CommandGroup>
+                  {options.map((option) => (
+                    <CommandItem
+                      key={option.value}
+                      value={option.label}
+                      keywords={[option.value]}
+                      onSelect={() => {
+                        onValueChange(option.value)
+                        handleOpenChange(false)
+                      }}
+                      className="gap-x-2"
+                    >
+                      <CheckIcon
+                        className={cn(
+                          'h-4 w-4 shrink-0',
+                          option.value === value ? 'opacity-100' : 'opacity-0'
+                        )}
+                      />
+                      {showIcons && option.icon && (
+                        <span aria-hidden="true" className="flex shrink-0">
+                          <ConnectionIcon icon={option.icon} />
+                        </span>
+                      )}
+                      <span className="truncate">{option.label}</span>
+                    </CommandItem>
+                  ))}
+                </CommandGroup>
+              </CommandList>
+            </ScrollViewport>
+            <ScrollBar />
+          </ScrollAreaPrimitive.Root>
         </Command>
       </PopoverContent>
     </Popover>
