@@ -1,7 +1,8 @@
 'use client'
 
+import { ScrollArea as ScrollAreaPrimitive } from 'radix-ui'
 import { forwardRef, useRef } from 'react'
-import { cn, CommandList } from 'ui'
+import { cn, CommandList, ScrollBar, ScrollViewport } from 'ui'
 
 import { CommandMenuEmpty } from '../internal/CommandMenuEmpty'
 import { CommandMenuGroup } from '../internal/CommandMenuGroup'
@@ -27,28 +28,37 @@ const CommandMenuList = forwardRef<
   }
 
   return (
-    <CommandList
-      ref={setRef}
-      className={cn('max-h-[initial] overflow-y-auto overflow-x-hidden bg-transparent', className)}
-      {...props}
-    >
-      <CommandMenuEmpty listRef={innerRef}>No results found.</CommandMenuEmpty>
-      {sortSectionsByRelevance(commandSections, query).map((section) => {
-        if (section.commands.every((command) => command.defaultHidden) && !query) return null
+    <ScrollAreaPrimitive.Root className="flex flex-col overflow-hidden">
+      <ScrollViewport>
+        <CommandList
+          ref={setRef}
+          className={cn('max-h-[initial] overflow-visible bg-transparent', className)}
+          {...props}
+        >
+          <CommandMenuEmpty listRef={innerRef}>No results found.</CommandMenuEmpty>
+          {sortSectionsByRelevance(commandSections, query).map((section) => {
+            if (section.commands.every((command) => command.defaultHidden) && !query) return null
 
-        return (
-          <CommandMenuGroup key={section.id} heading={section.name} forceMount={section.forceMount}>
-            {section.commands
-              .filter((command) => !command.defaultHidden || query)
-              .map((command) => (
-                <CommandMenuItem key={command.id} command={command}>
-                  <TextHighlighter>{command.name}</TextHighlighter>
-                </CommandMenuItem>
-              ))}
-          </CommandMenuGroup>
-        )
-      })}
-    </CommandList>
+            return (
+              <CommandMenuGroup
+                key={section.id}
+                heading={section.name}
+                forceMount={section.forceMount}
+              >
+                {section.commands
+                  .filter((command) => !command.defaultHidden || query)
+                  .map((command) => (
+                    <CommandMenuItem key={command.id} command={command}>
+                      <TextHighlighter>{command.name}</TextHighlighter>
+                    </CommandMenuItem>
+                  ))}
+              </CommandMenuGroup>
+            )
+          })}
+        </CommandList>
+      </ScrollViewport>
+      <ScrollBar className="w-1.5 pr-0.5 before:right-0.5" />
+    </ScrollAreaPrimitive.Root>
   )
 })
 CommandMenuList.displayName = 'CommandMenuList'
